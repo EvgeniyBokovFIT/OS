@@ -2,10 +2,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
-#include <unistd.h#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <string.h>
 #include <unistd.h>
 static const int THREAD_CREATED_SUCCESSFULLY = 0;
 static const int BUF_SIZE = 256;
