@@ -7,8 +7,9 @@
 #define BUF_SIZE 256
 
 void *print(void *arg) {
-    for(int i = 0; i < 10; i++)
-    printf("%s %d\n", (char*)arg, i + 1);
+    for(int i = 0; i < 10; i++) {
+        printf("%s %d\n", (char*)arg, i + 1);
+    }
     return NULL;
 }
 
