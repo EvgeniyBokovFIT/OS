@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    print("PARENT");
+    print((void*)"PARENT");
     pthread_exit(NULL);
     return (EXIT_SUCCESS);
 }
