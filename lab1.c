@@ -25,5 +25,4 @@ int main(int argc, char *argv[]) {
 
     print("PARENT");
     pthread_exit(NULL);
-    return (EXIT_SUCCESS);
 }
