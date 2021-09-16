@@ -3,8 +3,8 @@
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
-static const int THREAD_CREATED_SUCCESSFULLY = 0;
-static const int BUF_SIZE = 256;
+#define THREAD_CREATED_SUCCESSFULLY 0
+#define BUF_SIZE 256
 
 void *print(void *arg) {
     for(int i = 0; i < 10; i++)
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    print((void*)"PARENT");
+    print("PARENT");
     pthread_exit(NULL);
     return (EXIT_SUCCESS);
 }
