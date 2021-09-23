@@ -16,7 +16,8 @@ void *print(void *arg) {
 int main(int argc, char *argv[]) {
     pthread_t threadID;
     int errnum;
-    errnum = pthread_create(&threadID, NULL, print, (void*)"CHILDREN");
+    static char* child = "CHILD";
+    errnum = pthread_create(&threadID, NULL, print, (void*)child);
     if (errnum != THREAD_CREATED_SUCCESSFULLY) {
         char str[BUF_SIZE];
         strerror_r(errnum, str, BUF_SIZE);
