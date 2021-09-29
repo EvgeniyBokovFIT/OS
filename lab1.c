@@ -10,13 +10,15 @@ void *print(void *arg) {
     for(int i = 0; i < 10; i++) {
         printf("%s %d\n", (char*)arg, i + 1);
     }
+    free(arg);
     return NULL;
 }
 
 int main(int argc, char *argv[]) {
     pthread_t threadID;
     int errnum;
-    static char* child = "CHILD";
+    char* child = (char*)malloc(5 * sizeof(char));
+    child = "CHILD";
     errnum = pthread_create(&threadID, NULL, print, (void*)child);
     if (errnum != THREAD_CREATED_SUCCESSFULLY) {
         char str[BUF_SIZE];
