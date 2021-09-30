@@ -18,11 +18,12 @@ int main(int argc, char *argv[]) {
     pthread_t threadID;
     int errnum;
     char* child = (char*)malloc(BUF_SIZE * sizeof(char));
-    char* parent = (char*)malloc(BUF_SIZE * sizeof(char)
+    char* parent = (char*)malloc(BUF_SIZE * sizeof(char));
     child = "CHILD";
     parent = "PARENT";
     errnum = pthread_create(&threadID, NULL, print, (void*)child);
     if (errnum != THREAD_CREATED_SUCCESSFULLY) {
+        free(child);
         char str[BUF_SIZE];
         strerror_r(errnum, str, BUF_SIZE);
         fprintf(stderr, "%s", str);
