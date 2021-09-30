@@ -17,8 +17,10 @@ void *print(void *arg) {
 int main(int argc, char *argv[]) {
     pthread_t threadID;
     int errnum;
-    char* child = (char*)malloc(5 * sizeof(char));
+    char* child = (char*)malloc(BUF_SIZE * sizeof(char));
+    char* parent = (char*)malloc(BUF_SIZE * sizeof(char)
     child = "CHILD";
+    parent = "PARENT";
     errnum = pthread_create(&threadID, NULL, print, (void*)child);
     if (errnum != THREAD_CREATED_SUCCESSFULLY) {
         char str[BUF_SIZE];
@@ -27,6 +29,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    print("PARENT");
+    print((void*)parent);
     pthread_exit(NULL);
 }
