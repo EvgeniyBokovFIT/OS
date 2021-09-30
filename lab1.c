@@ -19,8 +19,8 @@ int main(int argc, char *argv[]) {
     int errnum;
     char* child = (char*)malloc(BUF_SIZE * sizeof(char));
     char* parent = (char*)malloc(BUF_SIZE * sizeof(char));
-    child = "CHILD";
-    parent = "PARENT";
+    strcpy(child, "CHILDREN");
+    strcpy(parent, "PARENT");
     errnum = pthread_create(&threadID, NULL, print, (void*)child);
     if (errnum != THREAD_CREATED_SUCCESSFULLY) {
         free(child);
