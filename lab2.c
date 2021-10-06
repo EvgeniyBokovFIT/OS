@@ -18,7 +18,7 @@ void *print(void *arg) {
 void printError(int errnum) {
     char str[BUF_SIZE];
     strerror_r(errnum, str, BUF_SIZE);
-    fprintf(stderr, "%s", str);
+    fprintf(stderr, "%s\n", str);
 }
 
 int main(int argc, char *argv[]) {
@@ -34,11 +34,12 @@ int main(int argc, char *argv[]) {
         printError(errnum);
         exit(EXIT_FAILURE);
     }
-    
+
     int joinCode;
     joinCode = pthread_join(threadID, NULL);
     if(joinCode != JOIN_COMPLETED_SUCCESFULLY) {
         printError(joinCode);
+        exit(EXIT_FAILURE);
     }
 
     print((void*)parent);
