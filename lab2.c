@@ -11,7 +11,6 @@ void *print(void *arg) {
     for(int i = 0; i < 10; i++) {
         printf("%s %d\n", (char*)arg, i + 1);
     }
-    free(arg);
     return NULL;
 }
 
@@ -24,13 +23,10 @@ void printError(int errnum) {
 int main(int argc, char *argv[]) {
     pthread_t threadID;
     int errnum;
-    char* child = (char*)malloc(BUF_SIZE * sizeof(char));
-    char* parent = (char*)malloc(BUF_SIZE * sizeof(char));
-    strcpy(child, "CHILDREN");
-    strcpy(parent, "PARENT");
+    char* child = "CHILDREN";
+    char* parent = "PARENT";
     errnum = pthread_create(&threadID, NULL, print, (void*)child);
     if (errnum != THREAD_CREATED_SUCCESSFULLY) {
-        free(child);
         printError(errnum);
         exit(EXIT_FAILURE);
     }
