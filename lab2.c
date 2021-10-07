@@ -5,7 +5,7 @@
 #include <unistd.h>
 #define JOIN_COMPLETED_SUCCESFULLY 0
 #define THREAD_CREATED_SUCCESSFULLY 0
-#define BUF_SIZE 256
+#define BUF_SIZE 1024
 
 void *print(void *arg) {
     for(int i = 0; i < 10; i++) {
