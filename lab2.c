@@ -23,7 +23,7 @@ void printError(int errnum) {
 int main(int argc, char *argv[]) {
     pthread_t threadID;
     int errnum;
-    char* child = "CHILDREN";
+    char* child = "CHILD";
     char* parent = "PARENT";
     errnum = pthread_create(&threadID, NULL, print, (void*)child);
     if (errnum != THREAD_CREATED_SUCCESSFULLY) {
