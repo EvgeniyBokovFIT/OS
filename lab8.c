@@ -128,7 +128,6 @@ Error getInputData(int argc, char** argv, Arguments* inputArgsValues) {
     return makeErrorStruct(success, NOT_THREAD_ERROR);
 }
 
-
 void countIterNumForEachThread(int numThreads, int numIterations, int* IterNumForThread) {
     int iterationsPerThread = numIterations / numThreads;
     for (int i = 0; i < numThreads; ++i) {
@@ -195,8 +194,7 @@ Error countPi(int numThreads, int numIterations, double* result) {
         return makeErrorStruct(memoryAllocationError, NOT_THREAD_ERROR);
     }
     countIterNumForEachThread(numThreads, numIterations, iterNumForThread);
-
-
+    
     ArgsForThread* threadArgs = (ArgsForThread*)malloc(sizeof(ArgsForThread) * numThreads);
     if (threadArgs == NULL) {
         free(iterNumForThread);
