@@ -136,10 +136,8 @@ void countIterNumForEachThread(int numThreads, int numIterations, int* IterNumFo
     }
 
     int remainderOfTheDiv = numIterations % numThreads;
-    {
-        for (int i = 0; i < remainderOfTheDiv; ++i) {
-            IterNumForThread[i] += 1;
-        }
+    for (int i = 0; i < remainderOfTheDiv; ++i) {
+        IterNumForThread[i] += 1;
     }
 }
 
