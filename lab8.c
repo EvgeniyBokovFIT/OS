@@ -13,6 +13,8 @@
 #define NOT_THREAD_ERROR 0
 #define DECIMAL_NUMERAL_SYSTEM 10
 #define MAX_THREADS_NUMBER 100000
+#define MIN_THREADS_NUMBER 1
+#define MIN_ITERATIONS_NUMBER 1
 
 typedef enum _ErrorType {
     invalidArgcNumber,
@@ -113,7 +115,7 @@ Error getInputData(int argc, char** argv, Arguments* inputArgsValues) {
     if (StrtolReturnError && errno == ERANGE) {
         return makeErrorStruct(threadNumRange, NOT_THREAD_ERROR);
     }
-    if (strtolRes < 1 || strtolRes > MAX_THREADS_NUMBER) {
+    if (strtolRes < MIN_THREADS_NUMBER || strtolRes > MAX_THREADS_NUMBER) {
         return makeErrorStruct(threadNumRange, NOT_THREAD_ERROR);
     }
 
@@ -123,7 +125,7 @@ Error getInputData(int argc, char** argv, Arguments* inputArgsValues) {
     if (StrtolReturnError && errno == ERANGE) {
         return makeErrorStruct(iterNumRange, NOT_THREAD_ERROR);
     }
-    if (strtolRes < 1 || strtolRes >= INT_MAX) {
+    if (strtolRes < MIN_ITERATIONS_NUMBER || strtolRes >= INT_MAX) {
         return makeErrorStruct(iterNumRange, NOT_THREAD_ERROR);
     }
     if (inputArgsValues->numIterations < inputArgsValues->numThreads) {
