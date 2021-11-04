@@ -11,6 +11,8 @@
 #define BUF_SIZE 1024
 #define CORRECT_ARGC_NUMBER 3
 #define NOT_THREAD_ERROR 0
+#define DECIMAL_NUMERAL_SYSTEM 10
+#define MAX_THREADS_NUMBER 100000
 
 typedef enum _ErrorType {
     invalidArgcNumber,
@@ -20,7 +22,6 @@ typedef enum _ErrorType {
     iterNumRange,
     argsDontMatch,
     success,
-    memoryAllocationError,
     threadCreatingError,
     threadJoiningError
 } ErrorType;
@@ -78,9 +79,6 @@ void printError(Error error) {
     case iterNumRange:
         fprintf(stderr, "Number of iterations is out of range: enter the number between 1 and INT_MAX-1\n");
         break;
-    case memoryAllocationError:
-        fprintf(stderr, "Can not allocate enough memory. Try to enter not so big number of threads\n");
-        break;
     case argsDontMatch:
         fprintf(stderr, "Number of iterations must not be less than number of threads\n");
         break;
@@ -109,17 +107,17 @@ Error getInputData(int argc, char** argv, Arguments* inputArgsValues) {
         }
         i++;
     }
-    long strtolRes = strtol(argv[1], NULL, 10);
+    long strtolRes = strtol(argv[1], NULL, DECIMAL_NUMERAL_SYSTEM);
     inputArgsValues->numThreads = strtolRes;
     bool StrtolReturnError = (strtolRes == LONG_MAX || strtolRes == LONG_MIN);
     if (StrtolReturnError && errno == ERANGE) {
         return makeErrorStruct(threadNumRange, NOT_THREAD_ERROR);
     }
-    if (strtolRes < 1 || strtolRes > 100000) {
+    if (strtolRes < 1 || strtolRes > MAX_THREADS_NUMBER) {
         return makeErrorStruct(threadNumRange, NOT_THREAD_ERROR);
     }
 
-    strtolRes = strtol(argv[2], NULL, 10);
+    strtolRes = strtol(argv[2], NULL, DECIMAL_NUMERAL_SYSTEM);
     inputArgsValues->numIterations = strtolRes;
     StrtolReturnError = (strtolRes == LONG_MAX || strtolRes == LONG_MIN);
     if (StrtolReturnError && errno == ERANGE) {
@@ -133,19 +131,6 @@ Error getInputData(int argc, char** argv, Arguments* inputArgsValues) {
     }
 
     return makeErrorStruct(success, NOT_THREAD_ERROR);
-}
-
-
-void countNumOfIterPerThread(int numThreads, int numIterations, int* IterNumForThread) {
-    int iterationsPerThread = numIterations / numThreads;
-    for (int i = 0; i < numThreads; ++i) {
-        IterNumForThread[i] = iterationsPerThread;
-    }
-
-    int remainderOfTheDiv = numIterations % numThreads;
-    for (int i = 0; i < remainderOfTheDiv; ++i) {
-        IterNumForThread[i] += 1;
-    }
 }
 
 ArgsForThread* createArgsForThreads(int numThreads, ArgsForThread* args, int NumOfItersPerThread, int countOfThreadsWithExtraIteration) {
@@ -164,7 +149,7 @@ ArgsForThread* createArgsForThreads(int numThreads, ArgsForThread* args, int Num
     return args;
 }
 
-void* findPartialSumValue(void* arg) {
+void* calculatePartialSumValue(void* arg) {
     ArgsForThread* threadArg = (ArgsForThread*)arg;
     for (int i = threadArg->shift; i < threadArg->shift + threadArg->iterNumber; ++i) {
         threadArg->partialSum += 1.0 / (i * 4.0 + 1.0);
@@ -199,7 +184,7 @@ Error gatherPartialSums(pthread_t* threadID, int numThreads, ArgsForThread* args
     return makeErrorStruct(success, NOT_THREAD_ERROR);
 }
 
-Error findPiValue(const int numThreads, int numIterations, double* result) {
+Error calculatePiValue(int numThreads, int numIterations, double* result) {
 
     int NumOfItersPerThread = numIterations / numThreads;
     int countOfThreadsWithExtraIteration = numIterations % numThreads;
@@ -220,7 +205,7 @@ Error findPiValue(const int numThreads, int numIterations, double* result) {
 
     pthread_t threadID[numThreads];
 
-    Error state = createThreads(numThreads, findPartialSumValue, threadArgs, threadID);
+    Error state = createThreads(numThreads, calculatePartialSumValue, threadArgs, threadID);
     if (state.errorType != success) {
         return state;
     }
@@ -239,7 +224,7 @@ int main(int argc, char** argv) {
     }
 
     double pi;
-    error = findPiValue(ArgsValues.numThreads, ArgsValues.numIterations, &pi);
+    error = calculatePiValue((int)ArgsValues.numThreads, (int)ArgsValues.numIterations, &pi);
     if (error.errorType != success) {
         printError(error);
         exit(EXIT_FAILURE);
