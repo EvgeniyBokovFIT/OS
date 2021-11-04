@@ -18,6 +18,7 @@ typedef enum _ErrorType {
     notPositiveNumber,
     threadNumRange,
     iterNumRange,
+    argsDontMatch,
     success,
     memoryAllocationError,
     threadCreatingError,
@@ -63,7 +64,7 @@ void printError(Error error) {
 
     switch (error.errorType) {
     case invalidArgcNumber:
-        fprintf(stderr, "Expected 2 arguments: number of threads and number of iterations\n");
+        fprintf(stderr, "USAGE: myprog number_of_threads number_of_iterations\n");
         break;
     case emptyArgument:
         fprintf(stderr, "Empty argument\n");
@@ -72,13 +73,16 @@ void printError(Error error) {
         fprintf(stderr, "Only positive numbers are expected in the arguments\n");
         break;
     case threadNumRange:
-        fprintf(stderr, "Number of threads is out of range\n");
+        fprintf(stderr, "Number of threads is out of range: enter the number between 1 and 100000\n");
         break;
     case iterNumRange:
-        fprintf(stderr, "Number of iterations is out of range\n");
+        fprintf(stderr, "Number of iterations is out of range: enter the number between 1 and INT_MAX-1\n");
         break;
     case memoryAllocationError:
         fprintf(stderr, "Can not allocate enough memory. Try to enter not so big number of threads\n");
+        break;
+    case argsDontMatch:
+        fprintf(stderr, "Number of iterations must not be less than number of threads\n");
         break;
     }
 }
@@ -111,7 +115,7 @@ Error getInputData(int argc, char** argv, Arguments* inputArgsValues) {
     if (StrtolReturnError && errno == ERANGE) {
         return makeErrorStruct(threadNumRange, NOT_THREAD_ERROR);
     }
-    if (strtolRes < 1 || strtolRes > INT_MAX) {
+    if (strtolRes < 1 || strtolRes > 100000) {
         return makeErrorStruct(threadNumRange, NOT_THREAD_ERROR);
     }
 
@@ -121,14 +125,18 @@ Error getInputData(int argc, char** argv, Arguments* inputArgsValues) {
     if (StrtolReturnError && errno == ERANGE) {
         return makeErrorStruct(iterNumRange, NOT_THREAD_ERROR);
     }
-    if (strtolRes < 1 || strtolRes > INT_MAX) {
+    if (strtolRes < 1 || strtolRes >= INT_MAX) {
         return makeErrorStruct(iterNumRange, NOT_THREAD_ERROR);
+    }
+    if (inputArgsValues->numIterations < inputArgsValues->numThreads) {
+        return makeErrorStruct(argsDontMatch, NOT_THREAD_ERROR);
     }
 
     return makeErrorStruct(success, NOT_THREAD_ERROR);
 }
 
-void countIterNumForEachThread(int numThreads, int numIterations, int* IterNumForThread) {
+
+void countNumOfIterPerThread(int numThreads, int numIterations, int* IterNumForThread) {
     int iterationsPerThread = numIterations / numThreads;
     for (int i = 0; i < numThreads; ++i) {
         IterNumForThread[i] = iterationsPerThread;
@@ -140,19 +148,23 @@ void countIterNumForEachThread(int numThreads, int numIterations, int* IterNumFo
     }
 }
 
-ArgsForThread* createThreadsFunctionArgs(int numThreads, int numIterations, const int* iterNums, ArgsForThread* args) {
-    args[0].iterNumber = iterNums[0];
+ArgsForThread* createArgsForThreads(int numThreads, ArgsForThread* args, int NumOfItersPerThread, int countOfThreadsWithExtraIteration) {
+    args[0].iterNumber = NumOfItersPerThread;
     args[0].shift = 0;
     args[0].partialSum = 0;
     for (int i = 1; i < numThreads; ++i) {
-        args[i].iterNumber = iterNums[i];
-        args[i].shift = args[i - 1].shift + iterNums[i - 1];
+        args[i].iterNumber = NumOfItersPerThread;
+        args[i].shift = args[i - 1].shift + NumOfItersPerThread;
         args[i].partialSum = 0;
+        if (i < countOfThreadsWithExtraIteration) {
+            args[i].iterNumber++;
+            args[i].shift++;
+        }
     }
     return args;
 }
 
-void* countPartialSum(void* arg) {
+void* findPartialSumValue(void* arg) {
     ArgsForThread* threadArg = (ArgsForThread*)arg;
     for (int i = threadArg->shift; i < threadArg->shift + threadArg->iterNumber; ++i) {
         threadArg->partialSum += 1.0 / (i * 4.0 + 1.0);
@@ -187,37 +199,32 @@ Error gatherPartialSums(pthread_t* threadID, int numThreads, ArgsForThread* args
     return makeErrorStruct(success, NOT_THREAD_ERROR);
 }
 
-Error countPi(int numThreads, int numIterations, double* result) {
+Error findPiValue(const int numThreads, int numIterations, double* result) {
 
-    int* iterNumForThread = (int*)malloc(sizeof(int) * numThreads);
-    if (iterNumForThread == NULL) {
-        return makeErrorStruct(memoryAllocationError, NOT_THREAD_ERROR);
-    }
-    countIterNumForEachThread(numThreads, numIterations, iterNumForThread);
-    
-    ArgsForThread* threadArgs = (ArgsForThread*)malloc(sizeof(ArgsForThread) * numThreads);
-    if (threadArgs == NULL) {
-        free(iterNumForThread);
-        return makeErrorStruct(memoryAllocationError, NOT_THREAD_ERROR);
-    }
-    threadArgs = createThreadsFunctionArgs(numThreads, numIterations, iterNumForThread, threadArgs);
-    free(iterNumForThread);
+    int NumOfItersPerThread = numIterations / numThreads;
+    int countOfThreadsWithExtraIteration = numIterations % numThreads;
 
-    pthread_t* threadID = (pthread_t*)malloc(sizeof(pthread_t) * numThreads);
-    if (threadID == NULL) {
-        free(iterNumForThread);
-        free(threadArgs);
-        return makeErrorStruct(memoryAllocationError, NOT_THREAD_ERROR);
+    ArgsForThread threadArgs[numThreads];
+    threadArgs[0].iterNumber = NumOfItersPerThread;
+    threadArgs[0].shift = 0;
+    threadArgs[0].partialSum = 0;
+    for (int i = 1; i < numThreads; ++i) {
+        threadArgs[i].iterNumber = NumOfItersPerThread;
+        threadArgs[i].shift = threadArgs[i - 1].shift + NumOfItersPerThread;
+        threadArgs[i].partialSum = 0;
+        if (i < countOfThreadsWithExtraIteration) {
+            threadArgs[i].iterNumber++;
+            threadArgs[i].shift++;
+        }
     }
-    Error state = createThreads(numThreads, countPartialSum, threadArgs, threadID);
+
+    pthread_t threadID[numThreads];
+
+    Error state = createThreads(numThreads, findPartialSumValue, threadArgs, threadID);
     if (state.errorType != success) {
         return state;
     }
     state = gatherPartialSums(threadID, numThreads, threadArgs, result);
-
-    free(iterNumForThread);
-    free(threadArgs);
-    free(threadID);
 
     return makeErrorStruct(success, NOT_THREAD_ERROR);
 }
@@ -232,7 +239,7 @@ int main(int argc, char** argv) {
     }
 
     double pi;
-    error = countPi(ArgsValues.numThreads, ArgsValues.numIterations, &pi);
+    error = findPiValue(ArgsValues.numThreads, ArgsValues.numIterations, &pi);
     if (error.errorType != success) {
         printError(error);
         exit(EXIT_FAILURE);
