@@ -28,7 +28,6 @@ void printThreadError(int errnum) {
     fprintf(stderr, "%s\n", str);
 }
 
-
 int destroySemaphores(int semaphoresCount, sem_t* semaphores) {
     int errnum;
     for (int i = 0; i < semaphoresCount; ++i) {
